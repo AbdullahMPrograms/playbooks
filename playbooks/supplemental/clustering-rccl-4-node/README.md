@@ -15,13 +15,13 @@ SPDX-License-Identifier: MIT
 
 Your Ryzen™ AI Halo is already capable of running large language models locally. Clustering takes this further by combining the GPU memory of multiple systems over a local network, giving you access to even larger models with stronger reasoning, better code generation, and deeper multilingual understanding, all entirely on your own hardware.
 
-This playbook teaches you how to cluster four Ryzen AI Halo systems using RCCL (ROCm Communication Collectives Library) with vLLM and run Qwen3.5-397B, a 397B parameter model, across both machines with ROCm acceleration.
+This playbook teaches you how to cluster four Ryzen AI Halo systems using RCCL (ROCm Communication Collectives Library) with vLLM and run Qwen3.5-397B, a 397B parameter model, across all four machines with ROCm acceleration.
 
 ## What You'll Learn
 
 - How to extend VRAM allocation on Ryzen AI Halo systems
 - Launching vLLM with ROCm support
-- Configuring RCCL for multi-node tensor-parallel inference across two Ryzen AI Halo systems
+- Configuring RCCL for multi-node tensor-parallel inference across four Ryzen AI Halo systems
 - Running a 397B parameter model across four networked Ryzen AI Halo systems
 
 ## Prerequisites
@@ -181,13 +181,13 @@ ray start --address=<MACHINE_1_IP>:6379 --node-ip-address=<MACHINE_N_IP> --num-g
 
 ### Step 3: Serve the Model (Machine 1)
 
-On Machine 1, launch the vLLM server. This will automatically download the model and begin serving it across both nodes:
+On Machine 1, launch the vLLM server. This will automatically download the model and begin serving it across all four nodes:
 
 ```bash
 vllm serve Qwen/Qwen3.5-397B-A17B-GPTQ-Int4 \
   --port 7000 \
   --host 0.0.0.0 \
-  --max-model-len 32768 \
+  --max-model-len 131072 \
   --gpu-memory-utilization 0.8 \
   --dtype float16 \
   --tensor-parallel-size 4 \
@@ -231,7 +231,7 @@ To connect Open WebUI to your vLLM endpoint:
 
 ![Open WebUI connection settings for the vLLM endpoint](assets/openwebui-connection.png)
 
-Once connected, select the model from the model dropdown in Open WebUI and start chatting. The model is now running across both of your Ryzen AI Halo nodes:
+Once connected, select the model from the model dropdown in Open WebUI and start chatting. The model is now running across all four of your Ryzen AI Halo nodes:
 
 ![Chatting with Qwen3.5-397B in Open WebUI](assets/openwebui-chat.png)
 
