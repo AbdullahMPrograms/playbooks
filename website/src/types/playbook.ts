@@ -51,7 +51,7 @@
  * <!-- @device:end -->
  * ```
  * 
- * Valid device IDs: halo, stx, krk, rx7900xt, rx9070xt, r9700.
+ * Valid device IDs: halo, grgh, mdsh, stx, krk, grgp, mdsp, rx7900xt, rx9070xt, r9700.
  * Content outside of `@device` tags is shown on all devices.
  * 
  * ## Pre-installed Software Dropdowns
@@ -76,18 +76,24 @@
 
 export type Platform = "windows" | "linux";
 export type Architecture = "halo" | "krk";
-export type Device = "halo" | "halo_box" | "stx" | "krk" | "rx7900xt" | "rx9070xt" | "r9700";
+export type Device = "halo" | "halo_box" | "grgh" | "grgh_box" | "mdsh" | "mdsh_box" | "stx" | "krk" | "grgp" | "mdsp" | "rx7900xt" | "rx9070xt" | "r9700";
 export type Category = "core" | "supplemental" | "backup";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 export type DeviceCategory = "reference" | "apu" | "gpu";
 
-export const DEVICE_IDS: Device[] = ["halo", "halo_box", "stx", "krk", "rx7900xt", "rx9070xt", "r9700"];
+export const DEVICE_IDS: Device[] = ["halo", "halo_box", "grgh", "grgh_box", "mdsh", "mdsh_box", "stx", "krk", "grgp", "mdsp", "rx7900xt", "rx9070xt", "r9700"];
 
 export const deviceNames: Record<Device, string> = {
   halo: "Ryzen™ AI Max",
   halo_box: "AMD Ryzen™ AI Halo",
+  grgh: "Gorgon Halo",
+  grgh_box: "Gorgon Halo Box",
+  mdsh: "Medusa Halo",
+  mdsh_box: "Medusa Halo Box",
   stx: "Ryzen™ AI 300 HX",
   krk: "Ryzen™ AI 300",
+  grgp: "Gorgon Point",
+  mdsp: "Medusa Point",
   rx7900xt: "Radeon™ RX 7900 XT",
   rx9070xt: "Radeon™ RX 9070 XT",
   r9700: "Radeon™ AI Pro R9700",
@@ -102,8 +108,8 @@ export interface DeviceCategoryInfo {
 }
 
 export const DEVICE_CATEGORIES: DeviceCategoryInfo[] = [
-  { id: "reference", name: "Reference Platforms", devices: ["halo_box"], deviceDisplayNames: { halo_box: "AMD Ryzen\u2122 AI Halo" } },
-  { id: "apu", name: "Ryzen\u2122 AI APUs", devices: ["halo", "stx", "krk"] },
+  { id: "reference", name: "Reference Platforms", devices: ["halo_box", "grgh_box", "mdsh_box"], deviceDisplayNames: { halo_box: "AMD Ryzen\u2122 AI Halo" } },
+  { id: "apu", name: "Ryzen\u2122 AI APUs", devices: ["halo", "grgh", "mdsh", "stx", "krk", "grgp", "mdsp"] },
   { id: "gpu", name: "Radeon\u2122 GPUs", devices: ["rx7900xt", "rx9070xt", "r9700"] },
 ];
 
@@ -144,8 +150,11 @@ export function extractCategoryDevices(
  * Prefers "reference" for halo, otherwise matches to apu/gpu.
  */
 export function categoryForDevice(device: Device): DeviceCategory {
-  if (device === "halo_box") return "reference";
-  if (device === "halo" || device === "stx" || device === "krk") return "apu";
+  if (device === "halo_box" || device === "grgh_box" || device === "mdsh_box") return "reference";
+  if (
+    device === "halo" || device === "grgh" || device === "mdsh" ||
+    device === "stx" || device === "krk" || device === "grgp" || device === "mdsp"
+  ) return "apu";
   return "gpu";
 }
 
@@ -197,20 +206,34 @@ export interface PlaybookMeta {
 
   /**
    * The main / default model this playbook runs, for at-a-glance user clarity.
-   * A single representative name even when the playbook mentions several
-   * (show the recommended/default one). Omitted for playbooks with no model
-   * (e.g. dev tools like AMD Sync, CVML, the kernel tutorial).
-   * Example: "primaryModel": "Qwen3.6-35B-A3B"
+   * Either a single string (same model on every device) OR an object keyed by
+   * Device, for playbooks that run a different model per device (e.g. a larger
+   * model on Halo/HaloBox and a smaller one on Strix/Krackan and dGPUs). The
+   * frontend shows the entry matching the selected device (falling back to any
+   * single value). Omitted for playbooks with no model (e.g. AMD Sync, CVML,
+   * the kernel tutorial).
+   * Examples:
+   *   "primaryModel": "Qwen3.6-35B-A3B"
+   *   "primaryModel": { "halo_box": "GPT-OSS-120B", "halo": "GPT-OSS-120B",
+   *                      "stx": "GPT-OSS-20B", "krk": "GPT-OSS-20B" }
    */
-  primaryModel?: string;
+  primaryModel?: string | Partial<Record<Device, string>>;
 
   /**
    * Recommended system memory (in GB) to run this playbook's primary model,
-   * as a coarse tier (8/16/24/32/64/128). Omitted for playbooks with no model
-   * (dev tools). Users with less memory should pick a smaller model where the
-   * playbook supports it. Example: "recommendedSystemMemory": 16
+   * as a coarse tier (8/16/24/32/64/128). Either a single number (same on every
+   * device) OR an object keyed by Device, for playbooks that run a different
+   * model per device (so the memory need differs — e.g. 128 GB where a large
+   * model runs on Halo, less on Strix/Krackan/dGPUs running a smaller model).
+   * The frontend shows the entry matching the selected device (falling back to
+   * any single value). Omitted for playbooks with no model (dev tools). Users
+   * with less memory should pick a smaller model where the playbook supports it.
+   * Examples:
+   *   "recommendedSystemMemory": 16
+   *   "recommendedSystemMemory": { "halo_box": 128, "halo": 128,
+   *                                 "stx": 32, "krk": 32 }
    */
-  recommendedSystemMemory?: number;
+  recommendedSystemMemory?: number | Partial<Record<Device, number>>;
 
   /**
    * Per-playbook software-version overrides, keyed by device CATEGORY
