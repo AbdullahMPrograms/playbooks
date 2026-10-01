@@ -185,6 +185,15 @@ extra_install_scripts:
       reboot_after: true
       platforms: ["windows"]
 
+  # OpenHands runs the published Linux Agent Canvas image on Windows. Enable
+  # WSL2 and reboot before dependency setup. The test-library dependency then
+  # installs Docker Desktop per-user (no second reboot), starts it under the
+  # actor account and health-gates the Linux engine.
+  openhands-getting-started:
+    - script: "InstallationScripts/gfx/windows-wsl.ps1"
+      reboot_after: true
+      platforms: ["windows"]
+
   # hermes-lemonade-server runs Hermes and Podman inside Ubuntu on WSL. Enable
   # the WSL core/features and reboot before app.wsl installs the distro during
   # dependency setup. Windows-only.
